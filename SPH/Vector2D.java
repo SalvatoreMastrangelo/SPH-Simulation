@@ -25,13 +25,13 @@ class Vector2D {
         return this.x * other.x + this.y * other.y;
     }
 
-    public void normalize() {
+    public Vector2D normalize() {
         double mag = magnitude();
         if (mag != 0) {
-            this.x /= mag;
-            this.y /= mag;
+            return new Vector2D(this.x / mag, this.y / mag);
         } else {
             System.err.println("Cannot normalize zero vector");
+            return new Vector2D(0, 0);
         }
     }
 }
