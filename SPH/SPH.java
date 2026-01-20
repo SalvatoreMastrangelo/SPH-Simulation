@@ -8,33 +8,35 @@ public class SPH {
         System.out.println("SPH Simulation Placeholder");
 
         // Simulation Parameters
-        double dt = 0.05; // time step in seconds
-        // Vector2D gravity = new Vector2D(0, 9.81);
-        Vector2D gravity = new Vector2D(0, 0);
+        double dt = 0.05; 
+        int substeps = 2;
+        Vector2D gravity = new Vector2D(0, 0.02);
+        // Vector2D gravity = new Vector2D(0, 0);
         double mass = 10;
-        double smoothRadius = 20;
-        int radius = 2;
+        double smoothRadius = 4;
+        int radius = 1;
         double density = mass * Utils.spiky(0, smoothRadius);
-        System.out.println("Rest Density: " + density);
-        double pressureConstant = 1000000;
-        double dampingFactor = 0.999;
-        int partAmount = 900;
+        double pressureConstant = 100;
+        double viscosityConstant = 1;
+        double dampingFactor = 1;
 
         // Initialize Fluid and Particles
-        Fluid fluid = new Fluid(density, pressureConstant);
-        int offset = 9;
+        Fluid fluid = new Fluid(density, pressureConstant, viscosityConstant);
+        int partAmountx = 66;
+        int partAmounty = 40;
+        int offset = 3;
 
         ArrayList<Particle> particles = new ArrayList<>();
-        for (int x = 0; x < Math.sqrt(partAmount); x++) {
-            for (int y = 0; y < Math.sqrt(partAmount); y++) {
-                particles.add(new Particle(radius, new Vector2D(50 + x * offset, 50 + y * offset), new Vector2D(0, 0), smoothRadius, mass, dampingFactor));
+        for (int x = 0; x < partAmountx; x++) {
+            for (int y = 0; y < partAmounty; y++) {
+                particles.add(new Particle(radius, new Vector2D(2 * radius + x * offset, 300 - (20 * radius + y * offset)), new Vector2D(0, 0), smoothRadius, mass, dampingFactor));
             }
         }
 
         fluid.particles = particles;
 
         // Graphics Setup
-        int windowWidth = 400;
+        int windowWidth = 200;
         int windowHeight = 300;
         JFrame f = new JFrame("Swing Graphics");
         f.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
@@ -47,11 +49,15 @@ public class SPH {
             int frameCount = 0;
 
             {
-                new Timer(5, e -> { // ~60 FPS
-                    if (getWidth() == 0 || getHeight() == 0) return;
+                setBackground(Color.BLACK);
+                setOpaque(true);
 
-                    // fluid.update(getWidth(), getHeight(), dt, gravity);
-                    fluid.updateParallel(getWidth(), getHeight(), dt, gravity);
+                new Timer(16, e -> {
+                    if (getWidth() == 0 || getHeight() == 0) return;
+                    for (int i = 0; i < substeps; i++) {
+                        // fluid.update(getWidth(), getHeight(), dt, gravity);
+                        fluid.updateParallel(getWidth(), getHeight(), dt, gravity);
+                    }
 
                     repaint();
                 }).start();

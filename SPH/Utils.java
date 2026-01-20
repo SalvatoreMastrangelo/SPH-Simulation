@@ -26,5 +26,10 @@ public class Utils {
         double scale = 12.0 / (Math.PI * Math.pow(smoothRadius, 4));
         return scale * (dist - smoothRadius);
     }
-    
+
+    public static long getHash(int cellX, int cellY) {
+        int prime1 = 73856093;
+        int prime2 = 19349663;
+        return Math.abs((cellX * prime1) ^ (cellY * prime2));
+    }    
 }
