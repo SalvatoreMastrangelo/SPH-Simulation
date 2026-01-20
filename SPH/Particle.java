@@ -67,25 +67,6 @@ class Particle {
         this.velocity.x += this.acceleration.x * dt;
         this.velocity.y += this.acceleration.y * dt;      
 
-        // if (this.position.x < this.radius) {
-        //     this.position.x = this.radius;
-        //     this.velocity.x = -this.velocity.x;
-        //     this.velocity.x *= Math.pow(dampingFactor, 20);
-        // } else if (this.position.x > windowWidth - this.radius) {
-        //     this.position.x = windowWidth - this.radius;
-        //     this.velocity.x = -this.velocity.x;
-        //     this.velocity.x *= Math.pow(dampingFactor, 20);
-        // }
-        // if (this.position.y < this.radius) {
-        //     this.position.y = this.radius;
-        //     this.velocity.y = -this.velocity.y;
-        //     this.velocity.y *= Math.pow(dampingFactor, 20);
-        // } else if (this.position.y > windowHeight - this.radius) {
-        //     this.position.y = windowHeight - this.radius;
-        //     this.velocity.y = -this.velocity.y;
-        //     this.velocity.y *= Math.pow(dampingFactor, 20);
-        // }
-
         this.velocity.x *= dampingFactor;
         this.velocity.y *= dampingFactor;
         this.acceleration.x = 0;
@@ -94,8 +75,8 @@ class Particle {
     }
 
     public void show(Graphics2D g) {
-        double speed = velocity.magnitude();
-        double maxSpeed = 3.5;
+        double speed = velocity.x * velocity.x + velocity.y * velocity.y;
+        double maxSpeed = 4;
 
         double t = speed / maxSpeed;
         if (t > 1) t = 1;

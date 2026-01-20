@@ -12,7 +12,7 @@ public class SPH {
         // Simulation Parameters
         double dt = 0.08; 
         int substeps = 25;
-        Vector2D gravity = new Vector2D(0, 0.02);
+        Vector2D gravity = new Vector2D(0, 0.03);
         // Vector2D gravity = new Vector2D(0, 0);
         double mass = 10;
         double smoothRadius = 4;
@@ -24,7 +24,7 @@ public class SPH {
 
         // Initialize Fluid and Particles
         int partAmountx = 66;
-        int partAmounty = 40;
+        int partAmounty = 60;
         int offset = 3;
 
         ArrayList<Particle> particles = new ArrayList<>();
@@ -53,7 +53,7 @@ public class SPH {
                 setBackground(Color.BLACK);
                 setOpaque(true);
 
-                new Timer(32, e -> {
+                new Timer(10, e -> {
                     if (getWidth() == 0 || getHeight() == 0) return;
                     
                     for (int i = 0; i < substeps; i++) {
@@ -87,7 +87,7 @@ public class SPH {
 
                 frameCount++;
                 now = System.nanoTime();
-                elapsedTimeSeconds = (now - lastTime) / 1_000_000_000.0;
+                elapsedTimeSeconds = (now - lastTime) / 1000000000.0;
                 if (elapsedTimeSeconds >= 0.5) {
                     double fps = frameCount / elapsedTimeSeconds;
                     System.out.println("FPS: " + fps);
