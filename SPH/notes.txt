@@ -1,0 +1,7 @@
+pressure parallel slower than serial? 
+
+density and forces application bottlenecks
+
+cell division optimization leads to approx 6-10x speedup in neighbor search
+
+neighbor search time is the limiting factor now

@@ -5,11 +5,13 @@ import java.util.ArrayList;
 
 public class SPH {
     public static void main(String[] args) {
-        System.out.println("SPH Simulation Placeholder");
+        
+        // Print stats
+        boolean verbose = false;
 
         // Simulation Parameters
-        double dt = 0.05; 
-        int substeps = 2;
+        double dt = 0.08; 
+        int substeps = 25;
         Vector2D gravity = new Vector2D(0, 0.02);
         // Vector2D gravity = new Vector2D(0, 0);
         double mass = 10;
@@ -17,11 +19,10 @@ public class SPH {
         int radius = 1;
         double density = mass * Utils.spiky(0, smoothRadius);
         double pressureConstant = 100;
-        double viscosityConstant = 1;
+        double viscosityConstant = 5;
         double dampingFactor = 1;
 
         // Initialize Fluid and Particles
-        Fluid fluid = new Fluid(density, pressureConstant, viscosityConstant);
         int partAmountx = 66;
         int partAmounty = 40;
         int offset = 3;
@@ -29,11 +30,11 @@ public class SPH {
         ArrayList<Particle> particles = new ArrayList<>();
         for (int x = 0; x < partAmountx; x++) {
             for (int y = 0; y < partAmounty; y++) {
-                particles.add(new Particle(radius, new Vector2D(2 * radius + x * offset, 300 - (20 * radius + y * offset)), new Vector2D(0, 0), smoothRadius, mass, dampingFactor));
+                particles.add(new Particle(radius, new Vector2D(2 * radius + x * offset, 300 - (19 * radius + y * offset)), new Vector2D(0, 0), smoothRadius, mass, dampingFactor));
             }
         }
 
-        fluid.particles = particles;
+        Fluid fluid = new Fluid(particles, density, pressureConstant, viscosityConstant);
 
         // Graphics Setup
         int windowWidth = 200;
@@ -52,11 +53,18 @@ public class SPH {
                 setBackground(Color.BLACK);
                 setOpaque(true);
 
-                new Timer(16, e -> {
+                new Timer(32, e -> {
                     if (getWidth() == 0 || getHeight() == 0) return;
+                    
                     for (int i = 0; i < substeps; i++) {
-                        // fluid.update(getWidth(), getHeight(), dt, gravity);
-                        fluid.updateParallel(getWidth(), getHeight(), dt, gravity);
+                        if (verbose) {
+                            System.out.println("---- Substep " + (i + 1) + "/" + substeps + " ----");
+                            double computeTime = System.nanoTime();
+                            fluid.updateParallel(getWidth(), getHeight(), dt, gravity, verbose);
+                            System.out.println("Update Time (ms):               " + (System.nanoTime() - computeTime) / 1_000_000.0);
+                        } else {
+                            fluid.updateParallel(getWidth(), getHeight(), dt, gravity, verbose);
+                        }
                     }
 
                     repaint();
@@ -69,7 +77,13 @@ public class SPH {
 
                 // fluid.showDensity(g, getWidth(), getHeight());
 
-                fluid.show(g);
+                if (verbose) {
+                    double showTime = System.nanoTime();
+                    fluid.show(g);
+                    System.out.println("Render Time (ms):               " + (System.nanoTime() - showTime) / 1_000_000.0);
+                } else {
+                    fluid.show(g);
+                }
 
                 frameCount++;
                 now = System.nanoTime();

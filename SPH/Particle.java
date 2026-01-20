@@ -54,10 +54,10 @@ class Particle {
             applyForce(new Vector2D(0, forceY));
         }
     }
-    public void computeHash() {
+
+    public void updateCell() {
         this.cell.x = Math.floor(this.position.x / this.smoothRadius);
-        this.cell.y = Math.floor(this.position.y / this.smoothRadius);
-        this.hash = Utils.getHash((int)this.cell.x, (int)this.cell.y);
+        this.cell.y = Math.floor(this.position.y / this.smoothRadius);    
     }
 
     public void update(int windowWidth, int windowHeight,double dt, Vector2D gravity) {
@@ -90,8 +90,7 @@ class Particle {
         this.velocity.y *= dampingFactor;
         this.acceleration.x = 0;
         this.acceleration.y = 0;
-        this.cell.x = Math.floor(this.position.x / this.smoothRadius);
-        this.cell.y = Math.floor(this.position.y / this.smoothRadius);    
+        updateCell();   
     }
 
     public void show(Graphics2D g) {
