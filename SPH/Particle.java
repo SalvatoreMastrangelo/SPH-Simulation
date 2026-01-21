@@ -57,7 +57,9 @@ class Particle {
 
     public void updateCell() {
         this.cell.x = Math.floor(this.position.x / this.smoothRadius);
-        this.cell.y = Math.floor(this.position.y / this.smoothRadius);    
+        this.cell.y = Math.floor(this.position.y / this.smoothRadius);  
+        if (this.cell.x < 0) this.cell.x = 0;
+        if (this.cell.y < 0) this.cell.y = 0;  
     }
 
     public void update(int windowWidth, int windowHeight,double dt, Vector2D gravity) {

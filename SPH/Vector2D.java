@@ -21,6 +21,10 @@ class Vector2D {
         return Math.sqrt(x * x + y * y);
     }
 
+    public double magnitudeSquared() {
+        return x * x + y * y;
+    }
+
     public double dot(Vector2D other) {
         return this.x * other.x + this.y * other.y;
     }

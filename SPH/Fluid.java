@@ -51,6 +51,7 @@ public class Fluid {
             return neighbors; // Skip neighbor search on first step
 
         } else {
+            double squaredSmoothRadius = p.smoothRadius * p.smoothRadius;
             Vector2D rij = new Vector2D(0, 0);
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
@@ -61,8 +62,8 @@ public class Fluid {
                         Particle pj = particles.get(pjIndex);
                         rij.x = pj.position.x - p.position.x;
                         rij.y = pj.position.y - p.position.y; 
-                        double dist = rij.magnitude();
-                        if (dist > p.smoothRadius) continue; 
+                        double distSquared = rij.magnitudeSquared();
+                        if (distSquared > squaredSmoothRadius) continue; 
                         neighbors.add(pjIndex);
                     }
                 }
@@ -146,7 +147,7 @@ public class Fluid {
                 double gradient = Utils.spikyGradient(dist, pi.smoothRadius);
                 if (gradient == 0) continue;  
                 Vector2D direction = rij.normalize();
-                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pi.mass / pj.density));
+                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pj.mass / pj.density));
             }
             pi.applyForce(pressureForce);
         }
@@ -171,7 +172,7 @@ public class Fluid {
                 double gradient = Utils.spikyGradient(dist, pi.smoothRadius);
                 if (gradient == 0) continue;  
                 Vector2D direction = rij.normalize();
-                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pi.mass / pj.density));
+                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pj.mass / pj.density));
             }
             pi.applyForce(pressureForce);
         });
@@ -219,6 +220,35 @@ public class Fluid {
         });
     }
 
+    private void applyMergedForcesParallel() {
+        particles.parallelStream().forEach(pi -> {
+            Vector2D pressureForce = new Vector2D(0, 0);
+            Vector2D viscosityForce = new Vector2D(0, 0);
+            Vector2D rij = new Vector2D(0, 0);
+            Vector2D velocityDiff = new Vector2D(0, 0);
+            Vector2D direction = new Vector2D(0, 0);
+            for (int pjIndex : getNeighbors(pi)) {
+                Particle pj = particles.get(pjIndex);
+                if (pi == pj) continue;
+                rij.x = pj.position.x - pi.position.x;
+                rij.y = pj.position.y - pi.position.y;
+                double dist = rij.magnitude();
+
+                double pressureMiddle = (pi.pressure + pj.pressure) / 2.0;
+                double gradient = Utils.spikyGradient(dist, pi.smoothRadius);
+                double laplacian = Utils.poly6Gradient(dist, pi.smoothRadius);
+                velocityDiff.x = pj.velocity.x - pi.velocity.x;
+                velocityDiff.y = pj.velocity.y - pi.velocity.y;
+                viscosityForce = viscosityForce.add(velocityDiff.scale(-viscosityConstant * laplacian * pj.mass / pj.density));
+                if (gradient == 0) continue;  
+                direction = rij.normalize();
+                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pj.mass / pj.density));
+            }
+            pi.applyForce(viscosityForce);
+            pi.applyForce(pressureForce);
+        });
+    }
+
     private void applyForces(Vector2D gravity, boolean verbose) {
         double forcesStartTime = System.nanoTime();
         applyPressureForce(verbose);
@@ -246,18 +276,25 @@ public class Fluid {
 
     private void applyForcesParallel(Vector2D gravity, boolean verbose) {
         double forcesStartTime = System.nanoTime();
-        applyPressureForceParallel();
-        if (verbose) {
-            double pressureTime = System.nanoTime();
-            System.out.println("Pressure Force Time (ms):       " + (pressureTime - forcesStartTime) / 1_000_000.0);
-            forcesStartTime = pressureTime;
-        }
+        // applyPressureForceParallel();
+        // if (verbose) {
+        //     double pressureTime = System.nanoTime();
+        //     System.out.println("Pressure Force Time (ms):       " + (pressureTime - forcesStartTime) / 1_000_000.0);
+        //     forcesStartTime = pressureTime;
+        // }
 
-        applyViscosityForceParallel();
+        // applyViscosityForceParallel();
+        // if (verbose) {
+        //     double viscosityTime = System.nanoTime();
+        //     System.out.println("Viscosity Force Time (ms):      " + (viscosityTime - forcesStartTime) / 1_000_000.0);
+        //     forcesStartTime = viscosityTime;
+        // }
+
+        applyMergedForcesParallel();
         if (verbose) {
-            double viscosityTime = System.nanoTime();
-            System.out.println("Viscosity Force Time (ms):      " + (viscosityTime - forcesStartTime) / 1_000_000.0);
-            forcesStartTime = viscosityTime;
+            double mergedForcesTime = System.nanoTime();
+            System.out.println("    Merged Force Time (ms):     " + (mergedForcesTime - forcesStartTime) / 1_000_000.0);
+            forcesStartTime = mergedForcesTime;
         }
 
         particles.parallelStream().forEach(p -> {
@@ -265,7 +302,7 @@ public class Fluid {
         });
         if (verbose) {
             double gravityTime = System.nanoTime();
-            System.out.println("Gravity Force Time (ms):        " + (gravityTime - forcesStartTime) / 1_000_000.0);
+            System.out.println("    Gravity Force Time (ms):    " + (gravityTime - forcesStartTime) / 1_000_000.0);
         }
     }
 
