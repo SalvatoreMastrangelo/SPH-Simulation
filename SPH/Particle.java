@@ -13,6 +13,7 @@ class Particle {
     Vector2D cell = new Vector2D(0, 0);
     long hash;
 
+    // Costruttore
     public Particle(int radius, Vector2D initialPosition, Vector2D initialVelocity, double smoothRadius, double mass, double dampingFactor) {
         this.radius = radius;
         this.smoothRadius = smoothRadius;
@@ -25,11 +26,15 @@ class Particle {
         this.dampingFactor = dampingFactor;
     }
 
+    // Metodo per applicare una forza alla particella
     public void applyForce(Vector2D force) {
         this.acceleration.x += force.x / this.mass;
         this.acceleration.y += force.y / this.mass;
     }
 
+    // Metodo per gestire le collisioni al bordo della finestra, 
+    // applicando una forza in stile molla proporzionale alla penetrazione della particella nel bordo,
+    // e un dampening per simulare l'attrito con il bordo
     private void boudaryForce(int windowWidth, int windowHeight) {
         double boundaryStiffness = 1000.0;
         double boundaryDamping = 50.0;
@@ -55,6 +60,8 @@ class Particle {
         }
     }
 
+    // Metodo per aggiornare gli indici della cella in cui si trova la particella nella
+    // griglia per ottimizzare la ricerca dei neighbor
     public void updateCell() {
         this.cell.x = Math.floor(this.position.x / this.smoothRadius);
         this.cell.y = Math.floor(this.position.y / this.smoothRadius);  
@@ -62,6 +69,7 @@ class Particle {
         if (this.cell.y < 0) this.cell.y = 0;  
     }
 
+    // Metodo per aggiornare la posizione e la velocitá della particella integrando l'accelerazione
     public void update(int windowWidth, int windowHeight,double dt, Vector2D gravity) {
         boudaryForce(windowWidth, windowHeight);
         this.position.x += this.velocity.x * dt + 0.5 * this.acceleration.x * dt * dt;
@@ -76,6 +84,8 @@ class Particle {
         updateCell();   
     }
 
+    // Metodo per disegnare la particella, assegna un colore diverso in base alla velocitá:
+    // rosso = veloce, blu = lento
     public void show(Graphics2D g) {
         double speed = velocity.x * velocity.x + velocity.y * velocity.y;
         double maxSpeed = 4;
@@ -83,7 +93,6 @@ class Particle {
         double t = speed / maxSpeed;
         if (t > 1) t = 1;
 
-        // Map speed to a heatmap: blue (cold) -> red (hot)
         float hue = (float) ((2.0 / 3.0) * (1.0 - t)); // 2/3=blue, 0=red
         Color heatColor = Color.getHSBColor(hue, 1.0f, 1.0f);
 

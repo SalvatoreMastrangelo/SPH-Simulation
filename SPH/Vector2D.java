@@ -1,12 +1,10 @@
 class Vector2D {
-    double x;
-    double y;
-    double mod;
+    public double x;
+    public double y;
 
     public Vector2D(double x, double y) {
         this.x = x;
         this.y = y;
-        this.mod = Math.sqrt(x * x + y * y);
     }
 
     public Vector2D add(Vector2D other) {

@@ -1,0 +1,31 @@
+Vector2D
+- a che serve mod, quando magnitude() o altri metodi non la usano?
+dimenticato da una correzione precdente
+
+-) perche' metodi che mettono pressione al GC ricreando nuove istanze tutte le volte?
+
+- la classe e' di fatto immutable, ma la cosa non e' esplicita, c'e' qualche motivo?
+non é immutabile, ad esempio in particle ci sono delle operazioni che modidicano x e y
+
+- se il programma deve gestire un tot. pre-definito di particelle che si muovono, direi che la posizione sarebbe meglio se fosse una classe regolare con metodi che la aggiornano...
+ho voluto tenere ogni particella a se stante per suddividere meglio le entitá in classi
+
+Fluid
+- gridWidth x gridHeight = 500 x 500, da cosa deriva? perche' non permettere di personalizzare questi valori?
+le dimensioni della griglia sono state scelte affiché la finestra potesse essere ridimensionata fino a schermo intero.
+
+- cos'e' tutta la roba commentata in appliForcesParallel()?
+una precedente implementazione, due diverse forze che venivano applicate individualmente, ma poi unite in una sola per ridurre il numero di ricerche di vicini
+
+- a cosa ti serve System.nanoTime()?
+li ho usati per profilare le funzioni per capire i bottleneck in fase di ottimizzazione
+
+- "x + y * gridWidth" sembra un pattern ricorrente, a ripeterlo si rischiano errori, incapsulerei in un helper method...
+in updatecellmatrix ho sostituito l'espressione con una variabile, in modo da ridurre il rischio di errori.
+
+- perche' in Fluid tutto private, mentre in Vector2D niente indicatori d'accesso?
+ho inteso erroneamente che non inserire public fosse equivalente ad averlo messo public
+
+Utils
+- come mai metodi che a naso sembrano avere a che fare con 3D / volumi, mentre da Vector2D hai tutto solamente in 2D?
+ho usato volume come volume sotto l'integrale, sarebbe andato bene anche area

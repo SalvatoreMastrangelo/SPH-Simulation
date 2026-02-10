@@ -58,6 +58,7 @@ public class SPH {
                 new Timer(32, e -> {
                     if (getWidth() == 0 || getHeight() == 0) return;
                     
+                    // Update loop
                     for (int i = 0; i < substeps; i++) {
                         if (verbose) {
                             System.out.println("---- Substep " + (i + 1) + "/" + substeps + " ----");
@@ -78,7 +79,8 @@ public class SPH {
                 Graphics2D g = (Graphics2D) gr;
 
                 // fluid.showDensity(g, getWidth(), getHeight());
-
+                
+                // Rendering loop
                 if (verbose) {
                     double showTime = System.nanoTime();
                     fluid.show(g);
@@ -87,6 +89,7 @@ public class SPH {
                     fluid.show(g);
                 }
 
+                // Ciclo per il calcolo dei FPS
                 frameCount++;
                 now = System.nanoTime();
                 elapsedTimeSeconds = (now - lastTime) / 1000000000.0;
