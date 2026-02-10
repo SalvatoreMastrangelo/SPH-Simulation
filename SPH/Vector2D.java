@@ -14,6 +14,18 @@ class Vector2D {
     public Vector2D scale(double scalar) {
         return new Vector2D(this.x * scalar, this.y * scalar);
     }
+
+    public Vector2D addThis(Vector2D other) {
+        this.x += other.x;
+        this.y += other.y;
+        return this;
+    }
+
+    public Vector2D scaleThis(double scalar) {
+        this.x *= scalar;
+        this.y *= scalar;
+        return this;
+    }
     
     public double magnitude() {
         return Math.sqrt(x * x + y * y);
@@ -35,5 +47,18 @@ class Vector2D {
             System.err.println("Cannot normalize zero vector");
             return new Vector2D(0, 0);
         }
+    }
+
+    public Vector2D normalizeThis() {
+        double mag = magnitude();
+        if (mag != 0) {
+            this.x /= mag;
+            this.y /= mag;
+        } else {
+            System.err.println("Cannot normalize zero vector");
+            this.x = 0;
+            this.y = 0;
+        }
+        return this;
     }
 }

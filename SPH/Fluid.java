@@ -260,10 +260,10 @@ public class Fluid {
                 double laplacian = Utils.poly6Gradient(dist, pi.smoothRadius);
                 velocityDiff.x = pj.velocity.x - pi.velocity.x;
                 velocityDiff.y = pj.velocity.y - pi.velocity.y;
-                viscosityForce = viscosityForce.add(velocityDiff.scale(-viscosityConstant * laplacian * pj.mass / pj.density));
+                viscosityForce.addThis(velocityDiff.scaleThis(-viscosityConstant * laplacian * pj.mass / pj.density));
                 if (gradient == 0) continue;  
-                direction = rij.normalize();
-                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pj.mass / pj.density));
+                direction = rij.normalizeThis();
+                pressureForce.addThis(direction.scaleThis(pressureMiddle * gradient * pj.mass / pj.density));
             }
             pi.applyForce(viscosityForce);
             pi.applyForce(pressureForce);
