@@ -1,0 +1,24 @@
+\section{Possibili Sviluppi Futuri}
+    Possibili Sviluppi sono articolabili sia riguardo l'accuratezza fisica sia riguardo la 
+    performance della simulazione.
+
+    \subsection{Tensione Superficiale}
+        La simulazione attuale non include fenomeni di tensione superficiale, 
+        modellizzabili come forze attrattive tra particelle vicine. L'attrazione in questione 
+        vedrebbe coinvolta una terza kernel function che impone una forza attrattiva tra particelle,
+        che prevale a distanze maggiori rispetto alla forza di pressione, e che é trascurabile a 
+        distanze ravvicinate, dove prevale l'ingombro della particella rappresentato come forza di 
+        pressione.
+
+    \subsection{Parallelizzazione mediante GPU}
+        L'attuale implementazione prevede solo una parallelizzazione a livello CPU per il calcolo
+        delle grandezze fisiche, ma essendo la task fortemente parallelizzabile, sarebbe possibile 
+        sviluppare dei kernel per GPU. Ciononostante, questa idea richiederebbe una riscrittura della
+        funzione di ricerca del neighborhood, che andrebbe ad utilizzare strutture dati 
+        piú adatte e tecniche di calcolo di hash per ciascuna cella.
+
+    \subsection{Trasposizione in 3D}
+        Pur essendo implementata in 2D, la trasposizione in 3 dimensioni sarebbe relativamente
+        semplice, richiedendo solo una riscrittura delle kernel functions e delle funzioni 
+        di supporto di calcolo tra vettori. Un problema piú complesso potrebbe porsi nell'utilizzo
+        della griglia per i neighbor, che in 3D risulterebbe molto piú dispendiosa in termini di memoria.

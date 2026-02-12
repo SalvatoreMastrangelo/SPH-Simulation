@@ -1,0 +1,47 @@
+\section{Difficoltá Implementative}
+    Tutte le ottimizzazioni elencate sono state implementate dopo una profilazione
+    dei tempi di esecuzione di ciascuna funzione che contribuisce all'evoluzione del sistema,
+    eseguita tramite l'ausilio della funzione \texttt{System.nanoTime()}, che ritorna il tempo
+    in nanosecondi dall'avvio della macchina virtuale Java. 
+    Tutte le profilazioni sono state eseguite su un calcolatore con le seguenti specifiche:
+    \begin{itemize}
+        \item Java: OpenJDK 11.0.30
+        \item CPU: Core 7 ultra 255hx
+        \item RAM: 32GB
+    \end{itemize}
+
+    Per ottimizzare le prestazioni, in tutti i loop che iterano sulle particelle sono stati usati dei
+    \texttt{.parallelStream().forEach(p -> \{...\})} per sfruttare l'alta parallelizzabilitá del problema, essendo
+    tutte le operazioni tra loro indipendenti.
+    
+    \subsection{Ricerca dei Neighbors}
+        Su ogni particella vengono applicate forze di pressione, viscositá e forze esterne,
+        come la gravitá. Escludendo quest'ultima, tutte le forze necessitano di una
+        ricerca dei Neighbors, dove una particella si definisce nel neighborhood di un'altra
+        se dista meno di $h$, lo smoothing radius. Una ricerca esaustiva é stata usata
+        in prima implementazione per semplicitá, ma é risultata eccessivamente lenta
+        per numeri di particelle superiori a qualche migliaio. Per risolvere questo 
+        problema dopo l'update di ogni singola particella vengono calcolati degli indici
+        in una griglia bidimensionale (\texttt{Particle.updateCell()}), in cui ogni cella ha lato di lunghezza $h$. 
+        Successivamente, viene riempito un vettore di arrayList con gli indici delle particelle 
+        che si trovano in ogni cella (\texttt{Fluid.updateCellMatrix()}), affinché in fase di ricerca 
+        sia sufficiente acquisire gli indici delle particelle nelle celle 
+        adiacenti a quella della particella in questione.
+
+    \subsection{Calcolo delle Forze}
+        Le forze di pressione e viscositá rappresentavano un collo di bottiglia significativo,
+        poiché per ciascuna particella bisogna iterare sulle vicine. Per ridurre il numero di 
+        ricerche dei neighbors, le due funzioni di calcolo delle forze sono state inglobate
+        in un'unica funzione \\
+        (\texttt{Fluid.applyMergedForcesParallel()}), che ha portato ad un miglioramento delle
+        prestazioni di circa il 10-15\%.
+
+    \subsection{Riduzione della Pressione sul GC}
+        In prima implementazione, le funzioni di calcolo delle forze utilizzavano delle funzioni
+        di supporto per operazioni tra vettori, implementate in \texttt{Vector2D}, che
+        restituivano una nuova istanza ad ogni call. 5 nuove istanze venivano create per ciascun
+        vicino per ciascuna particella, portando ad un numero di oggetti creati per frame maggiore
+        di 2.4 milioni per circa 4000 particelle. Tale pressione sul GC portava ad un rallentamento 
+        per frame di circa 2.5ms. Per risolvere questo problema, sono state implementate delle
+        funzioni di supporto che modificano i vettori invece di ritornarne uno nuovo
+        (\texttt{Vector2D.addThis($\cdot$)}, \texttt{Vector2D.scaleThis($\cdot$)}, \texttt{Vector2D.normalizeThis($\cdot$)})

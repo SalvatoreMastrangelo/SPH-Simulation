@@ -1,0 +1,44 @@
+\documentclass{article}
+\usepackage{graphicx}
+\usepackage[utf8]{inputenc}
+\usepackage{tikz}
+\usetikzlibrary{positioning, shapes.geometric, arrows.meta}
+\usetikzlibrary{calc}
+\usepackage[english]{babel}
+\usepackage{float}
+\usepackage{amsmath}
+\usepackage{enumitem}
+\usepackage{geometry}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{amssymb}
+\usepackage{subcaption}
+
+\lstset{
+  basicstyle=\ttfamily\small,
+  backgroundcolor=\color{gray!10},
+  frame=single,
+  breaklines=true,
+  keywordstyle=\color{blue},
+  commentstyle=\color{gray},
+  stringstyle=\color{orange},
+  numbers=left,
+  numbersep=10pt,
+}
+
+\geometry{left=3.5cm, right=3.5cm}
+
+\title{Fondamenti di Java \\ Smoothed Particle Hydrodynamics}
+\author{Salvatore Mastrangelo}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\input{chapters/1_introduction.tex}
+\input{chapters/2_equations.tex}
+\input{chapters/3_implementation.tex}
+\input{chapters/4_future_development.tex}
+
+\end{document}
