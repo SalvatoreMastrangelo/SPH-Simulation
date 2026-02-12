@@ -23,6 +23,11 @@ public class Fluid {
         }
     }
 
+    // Helper method per ottenere l'indice della cella a partire dalle coordinate della cella stessa,
+    private int getCellIndex(int cellX, int cellY) {
+        return cellX + cellY * gridWidth;
+    }
+
     // Metodo per resettare la matrice delle celle prima di aggiornarla con le nuove posizioni,
     // solo le celle che erano occupate vengono resettate
     private void clearCellMatrix() {
@@ -40,7 +45,7 @@ public class Fluid {
         Particle supportParticle;
         for (int i = 0; i < particles.size(); i++) {
             supportParticle = particles.get(i);
-            int cellIndex = (int)supportParticle.cell.x + (int)supportParticle.cell.y * gridWidth;
+            int cellIndex = getCellIndex((int)supportParticle.cell.x, (int)supportParticle.cell.y);
             cellMatrix[cellIndex].add(i);
             if (!cellOccupied[cellIndex]) {
                 cellOccupied[cellIndex] = true;
@@ -72,7 +77,7 @@ public class Fluid {
                     int cellX = (int)(p.cell.x + dx);
                     int cellY = (int)(p.cell.y + dy);
                     if (cellX < 0 || cellY < 0 || cellX >= gridWidth || cellY >= gridHeight) continue;
-                    for (Integer pjIndex : cellMatrix[cellX + cellY * gridWidth]) {
+                    for (Integer pjIndex : cellMatrix[getCellIndex(cellX, cellY)]) {
                         Particle pj = particles.get(pjIndex);
                         rij.x = pj.position.x - p.position.x;
                         rij.y = pj.position.y - p.position.y; 
