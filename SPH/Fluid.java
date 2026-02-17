@@ -2,25 +2,35 @@ import java.awt.*;
 import java.util.ArrayList;
 
 public class Fluid {
-    private int gridWidth = 640;
-    private int gridHeight = 400;
+    private final int boxWidth;
+    private final int boxHeight;
+    private final int gridWidth;
+    private final int gridHeight;
     private ArrayList<Particle> particles;
-    private ArrayList<Integer>[] cellMatrix = new ArrayList[gridWidth * gridHeight];
-    private boolean[] cellOccupied = new boolean[gridWidth * gridHeight];
-    private double density;
-    private double pressureConstant;
-    private double viscosityConstant;
+    private ArrayList<Integer>[] cellMatrix;
+    private boolean[] cellOccupied;
+    private final double density;
+    private final double pressureConstant;
+    private final double viscosityConstant;
+    private final Vector2D gravity;
     private boolean firstStep = true;
     
     // Costruttore
-    public Fluid(ArrayList<Particle> particles, double density, double pressureConstant, double viscosityConstant) {
+    public Fluid(ArrayList<Particle> particles, double density, double pressureConstant, double viscosityConstant, Vector2D gravity, int gridWidth, int gridHeight) {
         this.particles = particles;
         this.density = density;
         this.pressureConstant = pressureConstant;
         this.viscosityConstant = viscosityConstant;
+        this.gravity = gravity;
+        this.gridWidth = gridWidth;
+        this.gridHeight = gridHeight;
+        this.boxWidth = (int) (gridWidth * particles.get(0).smoothRadius);
+        this.boxHeight = (int) (gridHeight * particles.get(0).smoothRadius);
+        cellMatrix = new ArrayList[gridWidth * gridHeight];
         for (int i = 0; i < cellMatrix.length; i++) {
             cellMatrix[i] = new ArrayList<>();
         }
+        cellOccupied = new boolean[gridWidth * gridHeight];
     }
 
     // Helper method per ottenere l'indice della cella a partire dalle coordinate della cella stessa,
@@ -45,7 +55,7 @@ public class Fluid {
         Particle supportParticle;
         for (int i = 0; i < particles.size(); i++) {
             supportParticle = particles.get(i);
-            int cellIndex = getCellIndex((int)supportParticle.cell.x, (int)supportParticle.cell.y);
+            int cellIndex = getCellIndex((int)supportParticle.cellX, (int)supportParticle.cellY);
             cellMatrix[cellIndex].add(i);
             if (!cellOccupied[cellIndex]) {
                 cellOccupied[cellIndex] = true;
@@ -74,8 +84,8 @@ public class Fluid {
             Vector2D rij = new Vector2D(0, 0);
             for (int dx = -1; dx <= 1; dx++) {
                 for (int dy = -1; dy <= 1; dy++) {
-                    int cellX = (int)(p.cell.x + dx);
-                    int cellY = (int)(p.cell.y + dy);
+                    int cellX = (int)(p.cellX + dx);
+                    int cellY = (int)(p.cellY + dy);
                     if (cellX < 0 || cellY < 0 || cellX >= gridWidth || cellY >= gridHeight) continue;
                     for (Integer pjIndex : cellMatrix[getCellIndex(cellX, cellY)]) {
                         Particle pj = particles.get(pjIndex);
@@ -93,22 +103,7 @@ public class Fluid {
     }
 
     // Metodo per il calcolo della densitá di ciascuna particella, in relazione a tutti i suoi vicini
-    private void calcDensity() {
-        for (Particle pi : particles) {
-            double densitySum = 0;
-            Vector2D rij = new Vector2D(0, 0);
-            for (int pjIndex : getNeighbors(pi)) {
-                Particle pj = particles.get(pjIndex);
-                rij.x = pj.position.x - pi.position.x;
-                rij.y = pj.position.y - pi.position.y;
-                double dist = rij.magnitude();
-                densitySum += pj.mass * Utils.spiky(dist, pi.smoothRadius);
-            }
-            pi.density = densitySum;
-        }
-    }
-
-    // Come sopra, ma in parallelo usando parallelStream essendo le operazioni indipendenti
+    // in parallelo usando parallelStream essendo le operazioni indipendenti
     private void calcDensityParallel() {
         particles.parallelStream().forEach(pi -> {
             double densitySum = 0;
@@ -126,121 +121,10 @@ public class Fluid {
 
     // Metodo per il calcolo della pressione di ciascuna particella, in relazione alla 
     // sua densitá e quella di riferimento del liquido (ovvero di una particella nel vuoto)
-    private void calcPressure() {
-        for (Particle p : particles) {
-            p.pressure = Math.max(0, pressureConstant * (p.density - this.density));
-        }
-    }
-
-    // Come sopra, ma in parallelo usando parallelStream
+    //in parallelo usando parallelStream
     private void calcPressureParallel() {
         particles.parallelStream().forEach(p -> {
             p.pressure = Math.max(0, pressureConstant * (p.density - this.density));
-        });
-    }
-
-    // Metodo per calcolare e applicare la forza di pressione su ciascuna particella, 
-    // si cumulano i contributi di tutte le particelle vicine
-    private void applyPressureForce(boolean verbose) {
-        double totalNeighborSearchTime = 0;
-        for (Particle pi : particles) {
-            Vector2D pressureForce = new Vector2D(0, 0);
-            Vector2D rij = new Vector2D(0, 0);
-            double neighborTime = System.nanoTime();
-            ArrayList<Integer> neighbors = getNeighbors(pi);
-            if (verbose) {
-                double neighborEndTime = System.nanoTime();
-                totalNeighborSearchTime += (neighborEndTime - neighborTime);
-            }
-            for (int pjIndex : neighbors) {
-                Particle pj = particles.get(pjIndex);
-                if (pi == pj) continue;
-                rij.x = pj.position.x - pi.position.x;
-                rij.y = pj.position.y - pi.position.y;
-                double dist = rij.magnitude();
-
-                double pressureMiddle = (pi.pressure + pj.pressure) / 2.0;
-                double gradient = Utils.spikyGradient(dist, pi.smoothRadius);
-                if (gradient == 0) continue;  
-                Vector2D direction = rij.normalize();
-                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pj.mass / pj.density));
-            }
-            pi.applyForce(pressureForce);
-        }
-        if (verbose) {
-            System.out.println("Neighbor Time Pressure (ms):    " + (totalNeighborSearchTime) / 1_000_000.0);
-        }
-        totalNeighborSearchTime = 0;
-    }
-
-    // Come sopra, ma in parallelo usando parallelStream
-    // nella versione ottimizzata, questo metodo non é utilizzato e inglobato in applyMergedForcesParallel
-    private void applyPressureForceParallel() {
-        particles.parallelStream().forEach(pi -> {
-            Vector2D pressureForce = new Vector2D(0, 0);
-            Vector2D rij = new Vector2D(0, 0);
-            for (int pjIndex : getNeighbors(pi)) {
-                Particle pj = particles.get(pjIndex);
-                if (pi == pj) continue;
-                rij.x = pj.position.x - pi.position.x;
-                rij.y = pj.position.y - pi.position.y;
-                double dist = rij.magnitude();
-
-                double pressureMiddle = (pi.pressure + pj.pressure) / 2.0;
-                double gradient = Utils.spikyGradient(dist, pi.smoothRadius);
-                if (gradient == 0) continue;  
-                Vector2D direction = rij.normalize();
-                pressureForce = pressureForce.add(direction.scale(pressureMiddle * gradient * pj.mass / pj.density));
-            }
-            pi.applyForce(pressureForce);
-        });
-    }
-
-    // Metodo per calcolare e applicare la forza di viscositá su ciascuna particella,
-    // calcolata cumulando i contributi di tutte le particelle vicine
-    private void applyViscosityForce() {
-        for (Particle pi : particles) {
-            Vector2D viscosityForce = new Vector2D(0, 0);
-            Vector2D rij = new Vector2D(0, 0);
-            Vector2D velocityDiff = new Vector2D(0, 0);
-            for (int pjIndex : getNeighbors(pi)) {
-                Particle pj = particles.get(pjIndex);
-                if (pi == pj) continue;
-                rij.x = pj.position.x - pi.position.x;
-                rij.y = pj.position.y - pi.position.y;
-                double dist = rij.magnitude();
-
-                // Forza proporzionale alla differenza di velocitá e al laplaciano del kernel, 
-                // che si considera uguale alla derivata della funzione poly6
-                double laplacian = Utils.poly6Gradient(dist, pi.smoothRadius);
-                velocityDiff.x = pj.velocity.x - pi.velocity.x;
-                velocityDiff.y = pj.velocity.y - pi.velocity.y;
-                viscosityForce = viscosityForce.add(velocityDiff.scale(-viscosityConstant * laplacian * pj.mass / pj.density));
-            }
-            pi.applyForce(viscosityForce);
-        }
-    }
-
-    // Come sopra, ma in parallelo usando parallelStream
-    // nella versione ottimizzata, questo metodo non é utilizzato e inglobato in applyMergedForcesParallel
-    private void applyViscosityForceParallel() {
-        particles.parallelStream().forEach(pi -> {
-            Vector2D viscosityForce = new Vector2D(0, 0);
-            Vector2D rij = new Vector2D(0, 0);
-            Vector2D velocityDiff = new Vector2D(0, 0);
-            for (int pjIndex : getNeighbors(pi)) {
-                Particle pj = particles.get(pjIndex);
-                if (pi == pj) continue;
-                rij.x = pj.position.x - pi.position.x;
-                rij.y = pj.position.y - pi.position.y;
-                double dist = rij.magnitude();
-
-                double laplacian = Utils.poly6Gradient(dist, pi.smoothRadius);
-                velocityDiff.x = pj.velocity.x - pi.velocity.x;
-                velocityDiff.y = pj.velocity.y - pi.velocity.y;
-                viscosityForce = viscosityForce.add(velocityDiff.scale(-viscosityConstant * laplacian * pj.mass / pj.density));
-            }
-            pi.applyForce(viscosityForce);
         });
     }
 
@@ -277,37 +161,7 @@ public class Fluid {
 
     // Metoodo per applicare tutte le forze su ciascuna particella (gravitá compresa)
     // Viene profilato il tempo di applicazione di ciascuna forza
-    private void applyForces(Vector2D gravity, boolean verbose) {
-        double forcesStartTime = System.nanoTime();
-
-        // applicazione delle forze di interazione
-        // Pressione
-        applyPressureForce(verbose);
-        if (verbose) {
-            double pressureTime = System.nanoTime();
-            System.out.println("Pressure Force Time (ms):       " + (pressureTime - forcesStartTime) / 1_000_000.0);
-            forcesStartTime = pressureTime;
-        }
-
-        // Viscositá
-        applyViscosityForce();
-        if (verbose) {
-            double viscosityTime = System.nanoTime();
-            System.out.println("Viscosity Force Time (ms):      " + (viscosityTime - forcesStartTime) / 1_000_000.0);
-            forcesStartTime = viscosityTime;
-        }
-
-        // Applicazione gravitá
-        for (Particle p : particles) {
-            p.applyForce(gravity.scale(p.mass));
-        }
-        if (verbose) {
-            double gravityTime = System.nanoTime();
-            System.out.println("Gravity Force Time (ms):        " + (gravityTime - forcesStartTime) / 1_000_000.0);
-        }
-    }
-
-    // Come sopra, ma in parallelo usando i metodi parallelizzati
+    // in parallelo usando i metodi parallelizzati
     // Le forze di pressione e viscositá vengono applicate con il metodo aggregato
     private void applyForcesParallel(Vector2D gravity, boolean verbose) {
         double forcesStartTime = System.nanoTime();
@@ -333,63 +187,6 @@ public class Fluid {
     // Metodo di update generale del fluido, che aggiorna: densitá, pressione, forze e posizione di 
     // ciascuna particella, oltre ad aggiornare la matrice delle celle
     // Vengono profilati i tempi di esecuzione di ciascun metodo
-    public void update(int windowWidth, int windowHeight, double dt, Vector2D gravity, boolean verbose) {
-        double startTime = System.nanoTime();
-        
-        // calcolo densitá
-        calcDensity();
-        if (verbose) {
-            double densityTime = System.nanoTime();
-            System.out.println("Density Calc Time (ms):   piu' tem      " + (densityTime - startTime) / 1_000_000.0);
-            startTime = densityTime;
-        }
-
-        // calcolo pressione
-        calcPressure();
-        if (verbose) {
-            double pressureTime = System.nanoTime();
-            System.out.println("Pressure Calc Time (ms):        " + (pressureTime - startTime) / 1_000_000.0);
-            startTime = pressureTime;
-        }
-
-        // applicazione forze
-        applyForces(gravity, verbose);
-        if (verbose) {
-            double forcesTime = System.nanoTime();
-            System.out.println("Forces Application Time (ms):   " + (forcesTime - startTime) / 1_000_000.0);
-            startTime = forcesTime;
-        }
-
-        // aggiornamento posizione e velocitá delle particelle
-        for (Particle p : particles) {
-            p.update(windowWidth, windowHeight, dt, gravity);
-        }
-        if (verbose) {
-            double updateTime = System.nanoTime();
-            System.out.println("Particles Update Time (ms):     " + (updateTime - startTime) / 1_000_000.0);
-        }
-
-        // pulizia e aggiornamento della matrice dei neighbor
-        if (firstStep == false) {
-            clearCellMatrix();
-            if (verbose) {
-                double clearTime = System.nanoTime();
-                System.out.println("Cell Matrix Clear Time (ms):    " + (clearTime - startTime) / 1_000_000.0);
-                startTime = clearTime;
-            }
-        }
-
-        updateCellMatrix();
-        if (verbose) {
-            double cellMatrixTime = System.nanoTime();
-            System.out.println("Cell Matrix Update Time (ms):   " + (cellMatrixTime - startTime) / 1_000_000.0);
-        }
-        
-        // ricerca completa dei neighbor solo al primo step
-        firstStep = false;
-    }
-
-    // Come sopra, ma con i metodi parallelizzati
     public void updateParallel(int windowWidth, int windowHeight, double dt, Vector2D gravity, boolean verbose) {
         double startTime = System.nanoTime();
 
@@ -447,11 +244,36 @@ public class Fluid {
         firstStep = false;
     }
 
-    // Metodo per visualizzare ogni particella del fluido
-    public void show(Graphics2D g){
-        for (Particle p : particles) {
-            p.show(g);
+    // Metodo per eseguire un nuovo step di simulazione, ovvero un ciclo di substeps
+    public void newStep(double dt, int substeps, int windowWidth, int windowHeight, boolean verbose) {
+        int simulationWidth = windowWidth;
+        int simulationHeight = windowHeight;
+        if (windowWidth > boxWidth) {
+            simulationWidth = boxWidth;
         }
+        if (windowHeight > boxHeight) {
+            simulationHeight = boxHeight;
+        }
+        for (int i = 0; i < substeps; i++) {
+            if (verbose) {
+                System.out.println("---- Substep " + (i + 1) + "/" + substeps + " ----");
+                double computeTime = System.nanoTime();
+                updateParallel(simulationWidth, simulationHeight, dt, gravity, verbose);
+                System.out.println("Update Time (ms):               " + (System.nanoTime() - computeTime) / 1_000_000.0);
+            } else {
+                updateParallel(simulationWidth, simulationHeight, dt, gravity, verbose);
+            }
+        }
+    }
+
+    // Metodo per ottenere la lista delle particelle, usato dall'oggetto rendering
+    public ArrayList<Particle> getParticles() {
+        return particles;
+    }
+
+    // Metodo per otterenere le dimensioni del box di simulazione, usato dall'oggetto rendering
+    public Vector2D returnBoundary() {
+        return new Vector2D(boxWidth, boxHeight);
     }
 
     // Metodo per visualizzare la densitá del fluido
@@ -490,5 +312,4 @@ public class Fluid {
             }
         }
     }
-
 }
