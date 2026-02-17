@@ -6,6 +6,8 @@ public class CommandLineParser {
     private double pressureConstant;
     private double viscosityConstant;
     private int particleAmount;
+    private int maxWindowWidth;
+    private int maxWindowHeight;
 
     public CommandLineParser(String[] args) {
         // Default values
@@ -16,6 +18,8 @@ public class CommandLineParser {
         this.pressureConstant = 100;
         this.viscosityConstant = 5;
         this.particleAmount = 1600;
+        this.maxWindowWidth = 1200;
+        this.maxWindowHeight = 600;
         
         // Parse arguments
         for (int i = 0; i < args.length; i += 2) {
@@ -41,6 +45,12 @@ public class CommandLineParser {
                     break;
                 case "--particleamount":
                     this.particleAmount = Integer.parseInt(args[i + 1]);
+                    break;
+                case "--maxwindowwidth":
+                    this.maxWindowWidth = Integer.parseInt(args[i + 1]);
+                    break;
+                case "--maxwindowheight":
+                    this.maxWindowHeight = Integer.parseInt(args[i + 1]);
                     break;
                 default:
                     System.out.println("Unknown parameter: " + args[i]);
@@ -68,5 +78,11 @@ public class CommandLineParser {
     }
     public int getParticleAmount() {
         return particleAmount; 
+    }
+    public int getMaxWindowWidth() {
+        return maxWindowWidth;
+    }
+    public int getMaxWindowHeight() {
+        return maxWindowHeight;
     }
 }
