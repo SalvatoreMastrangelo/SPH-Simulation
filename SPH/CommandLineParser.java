@@ -42,6 +42,8 @@ public class CommandLineParser {
                 case "--particleamount":
                     this.particleAmount = Integer.parseInt(args[i + 1]);
                     break;
+                default:
+                    System.out.println("Unknown parameter: " + args[i]);
             }
         }
     }
