@@ -17,7 +17,7 @@ public class CommandLineParser {
         this.smoothRadius = 4;
         this.pressureConstant = 100;
         this.viscosityConstant = 5;
-        this.particleAmount = 1600;
+        this.particleAmount = 4900;
         this.maxWindowWidth = 1200;
         this.maxWindowHeight = 600;
         

@@ -31,8 +31,8 @@ public class SPH {
         final int targetFPS = 30;
         final int windowWidth = 200;
         final int windowHeight = 300;
-        final int maxWidth = 1200;
-        final int maxHeight = 600;
+        final int maxWidth = parser.getMaxWindowWidth();
+        final int maxHeight = parser.getMaxWindowHeight();
         final int gridWidth = (int) Math.ceil(maxWidth / smoothRadius);
         final int gridHeight = (int) Math.ceil(maxHeight / smoothRadius);
 

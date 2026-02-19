@@ -35,7 +35,7 @@ class Particle {
     // Metodo per gestire le collisioni al bordo della finestra, 
     // applicando una forza in stile molla proporzionale alla penetrazione della particella nel bordo,
     // e un dampening per simulare l'attrito con il bordo
-    private void boudaryForce(int windowWidth, int windowHeight) {
+    private void boundaryForce(int windowWidth, int windowHeight) {
         double boundaryStiffness = 100.0;
         double boundaryDamping = 50.0;
 
@@ -71,7 +71,7 @@ class Particle {
 
     // Metodo per aggiornare la posizione e la velocitá della particella integrando l'accelerazione
     public void update(int windowWidth, int windowHeight,double dt, Vector2D gravity) {
-        boudaryForce(windowWidth, windowHeight);
+        boundaryForce(windowWidth, windowHeight);
         this.position.x += this.velocity.x * dt + 0.5 * this.acceleration.x * dt * dt;
         this.position.y += this.velocity.y * dt + 0.5 * this.acceleration.y * dt * dt;
         this.velocity.x += this.acceleration.x * dt;
