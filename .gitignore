@@ -2,24 +2,8 @@ mail.txt
 
 notes.txt
 
-# Java compilation
-*.class
-*.jar
-*.war
-*.ear
-*.hs_err_pid*
-
-# LaTeX compilation
 *.aux
 *.fdb_latexmk
 *.fls
 *.log
-*.out
-*.toc
 *.synctex.gz
-*.pdf
-*.bbl
-*.blg
-*.lof
-*.lot
-*.lol
