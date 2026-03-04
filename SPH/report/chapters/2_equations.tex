@@ -1,8 +1,8 @@
 \section{Equazioni Governanti}
     L'interazione tra particelle è di tipo locale, e si estende fino ad una distanza
-    prefissata chiamata \textit{Smoothing Radius}. L'intensitá dell'interazione
+    prefissata chiamata \textit{Smoothing Radius}. L'intensità dell'interazione
     dipende da una funzione di smoothing, chiamata \textit{Kernel Function}, che
-   è una funzione ad area unitaria e decrescente con la distanza. Spesso é
+   è una funzione ad area unitaria e decrescente con la distanza. Spesso è
     definita come:
     \[W(|\mathbf{r} - \mathbf{r'}|, h)\]
     dove:
@@ -10,12 +10,12 @@
         \item $\mathbf{r}, \mathbf{r'}$: posizioni delle particelle
         \item $h$: smoothing radius
     \end{itemize}
-    Tutte le grandeezze fisiche, come densitá, e forze di pressione, sono calcolate
+    Tutte le grandezze fisiche, come densità, e forze di pressione, sono calcolate
     come: 
     \[
     A(\mathbf{r}) = \int A(\mathbf{r}') \, W\left(| \mathbf{r} - \mathbf{r}' |, h\right) \, dV(\mathbf{r}')
     \]
-    che puó essere discretizzata come:
+    che può essere discretizzata come:
     \[
     A(\mathbf{r}) = \sum_{j} V_j A_j \, W\left(| \mathbf{r} - \mathbf{r}_j |, h\right)
     \]
@@ -29,5 +29,5 @@
     
     \newpage
 
-    Ad esempio, per il calcolo della densitá:
+    Ad esempio, per il calcolo della densità:
     \[\rho(\mathbf{r}) = \sum_{j} V_j \rho_j \, W\left(| \mathbf{r} - \mathbf{r}_j |, h\right) = \sum_{j} m_j \, W\left(| \mathbf{r} - \mathbf{r}_j |, h\right)\] 
